@@ -37,5 +37,15 @@ TESTS:
 Des tests JUnit vérifient les principales règles métier et ils sont executes avec MAVEN
 "mvn test"
 
+DIFFICULTES RENCONTRES:
+Javais quelques difficultes pour equals et hashcode , mais egalement au niveau du menu ,mais je suis partie lapprendre afin de pouvoir le faire 
+Jai eu aussi des problemes pour faire BibliothequeService mais par la suite  j’ai finalement réussi à les mettre en place correctement
+
+RESULTAT OBTENU:
+Tests run: 3
+Failures: 0
+Errors: 0
+BUILD SUCCESS
+
 TECHNOLOGIES:
 JAVA 17;JUNIT5;MAVEN
