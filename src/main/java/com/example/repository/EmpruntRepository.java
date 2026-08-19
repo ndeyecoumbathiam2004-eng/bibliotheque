@@ -1,8 +1,6 @@
 package com.example.repository;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import com.example.entites.Emprunt;
 
 public class EmpruntRepository implements Repository<Emprunt> {

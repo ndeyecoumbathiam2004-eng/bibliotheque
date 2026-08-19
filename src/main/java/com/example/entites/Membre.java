@@ -1,5 +1,4 @@
 package com.example.entites;
-
 public class Membre {
 
     private Long id;
@@ -28,6 +27,5 @@ public boolean equals(Object obj) {
 public int hashCode() {
     return id.hashCode();
 }
-
 }
 
