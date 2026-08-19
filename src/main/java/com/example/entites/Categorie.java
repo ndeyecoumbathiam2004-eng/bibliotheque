@@ -1,5 +1,9 @@
 package com.example.entites;
 
-public class Categorie {
-
+public enum Categorie {
+    ROMAN,
+    SCIENCE,
+    INFORMATIQUE,
+    HISTOIRE
 }
+
