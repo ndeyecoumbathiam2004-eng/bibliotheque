@@ -2,6 +2,7 @@ package com.example.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,7 +40,9 @@ public class BibliothequeService {
         }
 
         if (nombreEmprunts >= 3) {
-            throw new QuotaEmpruntException("Le membre a déjà 3 emprunts en cours.");
+            throw new QuotaEmpruntException(
+                    "Le membre a déjà 3 emprunts en cours."
+            );
         }
 
         livre.setEtat(EtatLivre.EMPRUNTE);
@@ -60,6 +63,10 @@ public class BibliothequeService {
             }
         }
 
+        resultats.sort(
+                Comparator.comparing(Emprunt::getDateRetourPrevue)
+        );
+
         return resultats;
     }
 
@@ -70,6 +77,7 @@ public class BibliothequeService {
         for (Emprunt emprunt : empruntRepository.findAll()) {
             if (emprunt.getDateRetourPrevue().isBefore(LocalDate.now())
                     && emprunt.getLivre().getEtat() == EtatLivre.EMPRUNTE) {
+
                 resultats.add(emprunt.getLivre());
             }
         }
@@ -78,6 +86,7 @@ public class BibliothequeService {
     }
 
     public Map<Categorie, Long> nombreEmpruntsParCategorie() {
+
         return empruntRepository.findAll()
                 .stream()
                 .collect(Collectors.groupingBy(

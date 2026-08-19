@@ -17,6 +17,17 @@ public Long getId(){
 public String getNom(){
     return nom;
 }
+public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!(obj instanceof Membre)) return false;
+
+    Membre membre = (Membre) obj;
+    return id.equals(membre.id);
+}
+
+public int hashCode() {
+    return id.hashCode();
+}
 
 }
 

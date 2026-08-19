@@ -39,4 +39,16 @@ public class Livre {
     public void setEtat(EtatLivre etat) {
         this.etat = etat;
     }
+
+    public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!(obj instanceof Livre)) return false;
+
+    Livre livre = (Livre) obj;
+    return id.equals(livre.id);
+}
+
+public int hashCode() {
+    return id.hashCode();
+}
 }
