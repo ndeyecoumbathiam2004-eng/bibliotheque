@@ -31,12 +31,13 @@ public class BibliothequeService {
     }
 
     public void enregistrerEmprunt(
-            Long membreId,
-            Long livreId,
-            LocalDate dateRetourPrevue) throws QuotaEmpruntException {
+            Long idMembre,
+            Long idLivre,
+            LocalDate dateRetourPrevue)
+            throws QuotaEmpruntException {
 
-        Membre membre = membreRepository.findById(membreId);
-        Livre livre = livreRepository.findById(livreId);
+        Membre membre = membreRepository.findById(idMembre);
+        Livre livre = livreRepository.findById(idLivre);
 
         if (membre == null) {
             System.out.println("Membre introuvable.");
@@ -49,25 +50,41 @@ public class BibliothequeService {
         }
 
         if (livre.getEtat() != EtatLivre.DISPONIBLE) {
-            System.out.println("Ce livre est déjà emprunté.");
+            System.out.println("Ce livre n'est pas disponible.");
             return;
         }
 
-        long nombreEmprunts = empruntRepository.findAll()
-                .stream()
-                .filter(e -> e.getMembre().getId().equals(membreId))
-                .count();
+        int nombreEmprunts = 0;
+
+        for (Emprunt emprunt : empruntRepository.findAll()) {
+
+            if (emprunt.getMembre().getId().equals(idMembre)
+                    && emprunt.getLivre().getEtat()
+                    == EtatLivre.EMPRUNTE) {
+
+                nombreEmprunts++;
+            }
+        }
 
         if (nombreEmprunts >= 3) {
             throw new QuotaEmpruntException(
-                    "Le membre a déjà 3 emprunts simultanés."
+                    "Le membre a déjà 3 emprunts en cours."
             );
         }
 
-        Long nouvelId = (long) (empruntRepository.findAll().size() + 1);
+        Long idEmprunt = 1L;
+
+        if (!empruntRepository.findAll().isEmpty()) {
+
+            idEmprunt = empruntRepository.findAll()
+                    .stream()
+                    .mapToLong(e -> e.getId())
+                    .max()
+                    .getAsLong() + 1;
+        }
 
         Emprunt emprunt = new Emprunt(
-                nouvelId,
+                idEmprunt,
                 membre,
                 livre,
                 LocalDate.now(),
@@ -75,14 +92,15 @@ public class BibliothequeService {
         );
 
         livre.setEtat(EtatLivre.EMPRUNTE);
+
         empruntRepository.save(emprunt);
 
         System.out.println("Emprunt enregistré avec succès.");
     }
 
-    public void enregistrerRetour(Long empruntId) {
+    public void enregistrerRetour(Long idEmprunt) {
 
-        Emprunt emprunt = empruntRepository.findById(empruntId);
+        Emprunt emprunt = empruntRepository.findById(idEmprunt);
 
         if (emprunt == null) {
             System.out.println("Emprunt introuvable.");
@@ -94,21 +112,24 @@ public class BibliothequeService {
         System.out.println("Livre retourné avec succès.");
     }
 
-    public List<Emprunt> listerEmpruntsMembre(Long membreId) {
+    public List<Emprunt> listerEmpruntsMembre(Long idMembre) {
 
         List<Emprunt> resultats = new ArrayList<>();
 
         for (Emprunt emprunt : empruntRepository.findAll()) {
 
-            if (emprunt.getMembre().getId().equals(membreId)
-                    && emprunt.getLivre().getEtat() == EtatLivre.EMPRUNTE) {
+            if (emprunt.getMembre().getId().equals(idMembre)
+                    && emprunt.getLivre().getEtat()
+                    == EtatLivre.EMPRUNTE) {
 
                 resultats.add(emprunt);
             }
         }
 
         resultats.sort(
-                Comparator.comparing(Emprunt::getDateRetourPrevue)
+                Comparator.comparing(
+                        Emprunt::getDateRetourPrevue
+                )
         );
 
         return resultats;
@@ -120,8 +141,10 @@ public class BibliothequeService {
 
         for (Emprunt emprunt : empruntRepository.findAll()) {
 
-            if (emprunt.getDateRetourPrevue().isBefore(LocalDate.now())
-                    && emprunt.getLivre().getEtat() == EtatLivre.EMPRUNTE) {
+            if (emprunt.getDateRetourPrevue()
+                    .isBefore(LocalDate.now())
+                    && emprunt.getLivre().getEtat()
+                    == EtatLivre.EMPRUNTE) {
 
                 resultats.add(emprunt.getLivre());
             }
