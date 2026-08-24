@@ -7,6 +7,7 @@ import java.util.Scanner;
 
 import com.example.entites.Categorie;
 import com.example.entites.Emprunt;
+import com.example.entites.EtatLivre;
 import com.example.entites.Livre;
 import com.example.entites.Membre;
 import com.example.repository.InMemoryRepository;
@@ -29,15 +30,12 @@ public class Main {
         Repository<Emprunt> empruntRepository =
                 new InMemoryRepository<>(Emprunt::getId);
 
-        BibliothequeService service = new BibliothequeService(
-                livreRepository,
-                membreRepository,
-                empruntRepository
-        );
-
-        System.out.println("=================================");
-        System.out.println("   BIENVENUE À LA BIBLIOTHÈQUE");
-        System.out.println("=================================");
+        BibliothequeService service =
+                new BibliothequeService(
+                        livreRepository,
+                        membreRepository,
+                        empruntRepository
+                );
 
         int choix;
 
@@ -55,6 +53,12 @@ public class Main {
             System.out.println("0. Quitter");
             System.out.print("Votre choix : ");
 
+            while (!scanner.hasNextInt()) {
+                System.out.println("Choix invalide. Entrez un chiffre.");
+                scanner.next();
+                System.out.print("Votre choix : ");
+            }
+
             choix = scanner.nextInt();
             scanner.nextLine();
 
@@ -64,14 +68,46 @@ public class Main {
 
                     System.out.println("\n===== AJOUTER UN MEMBRE =====");
 
-                    System.out.print("Entrez l'ID du membre : ");
-                    Long membreId = scanner.nextLong();
-                    scanner.nextLine();
+                    Long membreId;
+
+                    do {
+
+                        System.out.print(
+                                "Entrez l'ID du membre (0 pour annuler) : "
+                        );
+
+                        while (!scanner.hasNextLong()) {
+                            System.out.println(
+                                    "ID invalide. Entrez un nombre."
+                            );
+                            scanner.next();
+                            System.out.print(
+                                    "Entrez l'ID du membre (0 pour annuler) : "
+                            );
+                        }
+
+                        membreId = scanner.nextLong();
+                        scanner.nextLine();
+
+                        if (membreId < 0) {
+                            System.out.println(
+                                    "L'ID ne peut pas être négatif."
+                            );
+                        }
+
+                    } while (membreId < 0);
+
+                    if (membreId == 0) {
+                        System.out.println("Opération annulée.");
+                        break;
+                    }
 
                     System.out.print("Entrez le nom du membre : ");
                     String nom = scanner.nextLine();
 
-                    Membre membre = new Membre(membreId, nom);
+                    Membre membre =
+                            new Membre(membreId, nom);
+
                     membreRepository.save(membre);
 
                     System.out.println(
@@ -84,9 +120,13 @@ public class Main {
 
                     System.out.println("\n===== AJOUTER UN LIVRE =====");
 
-                    System.out.print("Entrez l'ID du livre : ");
-                    Long livreId = scanner.nextLong();
-                    scanner.nextLine();
+                    Long livreId =
+                            (long) (livreRepository.findAll().size() + 1);
+
+                    System.out.println(
+                            "ID du livre généré automatiquement : "
+                                    + livreId
+                    );
 
                     System.out.print("Entrez le titre du livre : ");
                     String titre = scanner.nextLine();
@@ -96,7 +136,8 @@ public class Main {
 
                     System.out.println("Choisissez une catégorie :");
 
-                    Categorie[] categories = Categorie.values();
+                    Categorie[] categories =
+                            Categorie.values();
 
                     for (int i = 0; i < categories.length; i++) {
                         System.out.println(
@@ -104,26 +145,46 @@ public class Main {
                         );
                     }
 
-                    System.out.print("Votre choix : ");
-                    int choixCategorie = scanner.nextInt();
-                    scanner.nextLine();
+                    int choixCategorie;
 
-                    if (choixCategorie < 1
-                            || choixCategorie > categories.length) {
+                    do {
 
-                        System.out.println("Catégorie invalide.");
-                        break;
-                    }
+                        System.out.print("Votre choix : ");
+
+                        while (!scanner.hasNextInt()) {
+                            System.out.println(
+                                    "Choix invalide. Entrez un nombre."
+                            );
+                            scanner.next();
+                            System.out.print("Votre choix : ");
+                        }
+
+                        choixCategorie = scanner.nextInt();
+                        scanner.nextLine();
+
+                        if (choixCategorie < 1
+                                || choixCategorie > categories.length) {
+
+                            System.out.println(
+                                    "Catégorie invalide."
+                            );
+                        }
+
+                    } while (
+                            choixCategorie < 1
+                                    || choixCategorie > categories.length
+                    );
 
                     Categorie categorie =
                             categories[choixCategorie - 1];
 
-                    Livre livre = new Livre(
-                            livreId,
-                            titre,
-                            auteur,
-                            categorie
-                    );
+                    Livre livre =
+                            new Livre(
+                                    livreId,
+                                    titre,
+                                    auteur,
+                                    categorie
+                            );
 
                     livreRepository.save(livre);
 
@@ -135,28 +196,164 @@ public class Main {
 
                 case 3:
 
-                    System.out.println("\n===== ENREGISTRER UN EMPRUNT =====");
-
-                    System.out.print("Entrez l'ID du membre : ");
-                    Long idMembre = scanner.nextLong();
-
-                    System.out.print("Entrez l'ID du livre : ");
-                    Long idLivre = scanner.nextLong();
-                    scanner.nextLine();
-
-                    System.out.print(
-                            "Entrez la date de retour prévue (AAAA-MM-JJ) : "
+                    System.out.println(
+                            "\n===== ENREGISTRER UN EMPRUNT ====="
                     );
 
-                    LocalDate dateRetour =
-                            LocalDate.parse(scanner.nextLine());
+                    System.out.println(
+                            "Entrez 0 pour annuler."
+                    );
+
+                    Long idMembre = null;
+                    Membre membreTrouve = null;
+
+                    do {
+
+                        System.out.print(
+                                "Entrez l'ID du membre : "
+                        );
+
+                        while (!scanner.hasNextLong()) {
+                            System.out.println(
+                                    "ID invalide. Entrez un nombre."
+                            );
+                            scanner.next();
+                            System.out.print(
+                                    "Entrez l'ID du membre : "
+                            );
+                        }
+
+                        idMembre = scanner.nextLong();
+                        scanner.nextLine();
+
+                        if (idMembre == 0) {
+                            System.out.println(
+                                    "Opération annulée."
+                            );
+                            break;
+                        }
+
+                        membreTrouve =
+                                membreRepository.findById(idMembre);
+
+                        if (membreTrouve == null) {
+
+                            System.out.println(
+                                    "Membre introuvable."
+                            );
+
+                            System.out.println(
+                                    "Veuillez entrer un ID de membre valide."
+                            );
+
+                        } else {
+
+                            System.out.println(
+                                    "Membre trouvé : "
+                                            + membreTrouve.getNom()
+                            );
+                        }
+
+                    } while (membreTrouve == null);
+
+                    if (idMembre == 0
+                            || membreTrouve == null) {
+                        break;
+                    }
+
+                    LocalDate dateRetour = null;
+
+                    do {
+
+                        System.out.print(
+                                "Entrez la date de retour prévue "
+                                        + "(AAAA-MM-JJ) : "
+                        );
+
+                        String date = scanner.nextLine();
+
+                        if (date.equals("0")) {
+                            System.out.println(
+                                    "Opération annulée."
+                            );
+                            break;
+                        }
+
+                        if (!date.matches(
+                                "\\d{4}-\\d{2}-\\d{2}"
+                        )) {
+
+                            System.out.println(
+                                    "Date invalide."
+                            );
+
+                            System.out.println(
+                                    "Le format doit être AAAA-MM-JJ."
+                            );
+
+                            continue;
+                        }
+
+                        try {
+
+                            dateRetour =
+                                    LocalDate.parse(date);
+
+                            System.out.println(
+                                    "Date valide."
+                            );
+
+                        } catch (Exception e) {
+
+                            System.out.println(
+                                    "Date invalide."
+                            );
+
+                            System.out.println(
+                                    "Cette date n'existe pas."
+                            );
+                        }
+
+                    } while (dateRetour == null);
+
+                    if (dateRetour == null) {
+                        break;
+                    }
+
+                    Livre livreDisponible = null;
+
+                    for (Livre livreDisponibleActuel :
+                            livreRepository.findAll()) {
+
+                        if (livreDisponibleActuel.getEtat()
+                                == EtatLivre.DISPONIBLE) {
+
+                            livreDisponible =
+                                    livreDisponibleActuel;
+
+                            break;
+                        }
+                    }
+
+                    if (livreDisponible == null) {
+
+                        System.out.println(
+                                "Aucun livre disponible."
+                        );
+
+                        break;
+                    }
 
                     try {
 
                         service.enregistrerEmprunt(
                                 idMembre,
-                                idLivre,
+                                livreDisponible.getId(),
                                 dateRetour
+                        );
+
+                        System.out.println(
+                                "Emprunt enregistré avec succès."
                         );
 
                     } catch (QuotaEmpruntException e) {
@@ -170,11 +367,65 @@ public class Main {
 
                 case 4:
 
-                    System.out.println("\n===== RETOURNER UN LIVRE =====");
+                    System.out.println(
+                            "\n===== RETOURNER UN LIVRE ====="
+                    );
 
-                    System.out.print("Entrez l'ID du membre : ");
-                    Long idMembreRetour = scanner.nextLong();
-                    scanner.nextLine();
+                    System.out.println(
+                            "Entrez 0 pour annuler."
+                    );
+
+                    Long idMembreRetour = null;
+                    Membre membreRetour = null;
+
+                    do {
+
+                        System.out.print(
+                                "Entrez l'ID du membre : "
+                        );
+
+                        while (!scanner.hasNextLong()) {
+                            System.out.println(
+                                    "ID invalide. Entrez un nombre."
+                            );
+                            scanner.next();
+                            System.out.print(
+                                    "Entrez l'ID du membre : "
+                            );
+                        }
+
+                        idMembreRetour =
+                                scanner.nextLong();
+
+                        scanner.nextLine();
+
+                        if (idMembreRetour == 0) {
+
+                            System.out.println(
+                                    "Opération annulée."
+                            );
+
+                            break;
+                        }
+
+                        membreRetour =
+                                membreRepository.findById(
+                                        idMembreRetour
+                                );
+
+                        if (membreRetour == null) {
+
+                            System.out.println(
+                                    "Membre introuvable."
+                            );
+                        }
+
+                    } while (membreRetour == null);
+
+                    if (idMembreRetour == 0
+                            || membreRetour == null) {
+                        break;
+                    }
 
                     List<Emprunt> emprunts =
                             service.listerEmpruntsMembre(
@@ -196,24 +447,57 @@ public class Main {
 
                         System.out.println(
                                 "ID emprunt : "
-                                + emprunt.getId()
-                                + " | Livre : "
-                                + emprunt.getLivre().getTitre()
-                                + " | ID livre : "
-                                + emprunt.getLivre().getId()
-                                + " | Retour prévu : "
-                                + emprunt.getDateRetourPrevue()
+                                        + emprunt.getId()
+                                        + " | Livre : "
+                                        + emprunt.getLivre()
+                                        .getTitre()
+                                        + " | Retour prévu : "
+                                        + emprunt
+                                        .getDateRetourPrevue()
                         );
                     }
 
-                    System.out.print(
-                            "\nEntrez l'ID de l'emprunt à retourner : "
-                    );
+                    Long idEmprunt;
 
-                    Long idEmprunt = scanner.nextLong();
-                    scanner.nextLine();
+                    do {
+
+                        System.out.print(
+                                "Entrez l'ID de l'emprunt "
+                                        + "à retourner "
+                                        + "(0 pour annuler) : "
+                        );
+
+                        while (!scanner.hasNextLong()) {
+                            System.out.println(
+                                    "ID invalide. Entrez un nombre."
+                            );
+                            scanner.next();
+                            System.out.print(
+                                    "Entrez l'ID de l'emprunt "
+                                            + "à retourner "
+                                            + "(0 pour annuler) : "
+                            );
+                        }
+
+                        idEmprunt = scanner.nextLong();
+                        scanner.nextLine();
+
+                    } while (idEmprunt < 0);
+
+                    if (idEmprunt == 0) {
+
+                        System.out.println(
+                                "Opération annulée."
+                        );
+
+                        break;
+                    }
 
                     service.enregistrerRetour(idEmprunt);
+
+                    System.out.println(
+                            "Livre retourné avec succès."
+                    );
 
                     break;
 
@@ -223,13 +507,61 @@ public class Main {
                             "\n===== EMPRUNTS D'UN MEMBRE ====="
                     );
 
-                    System.out.print(
-                            "Entrez l'ID du membre : "
+                    System.out.println(
+                            "Entrez 0 pour annuler."
                     );
 
-                    Long idMembreRecherche =
-                            scanner.nextLong();
-                    scanner.nextLine();
+                    Long idMembreRecherche = null;
+                    Membre membreRecherche = null;
+
+                    do {
+
+                        System.out.print(
+                                "Entrez l'ID du membre : "
+                        );
+
+                        while (!scanner.hasNextLong()) {
+                            System.out.println(
+                                    "ID invalide. Entrez un nombre."
+                            );
+                            scanner.next();
+                            System.out.print(
+                                    "Entrez l'ID du membre : "
+                            );
+                        }
+
+                        idMembreRecherche =
+                                scanner.nextLong();
+
+                        scanner.nextLine();
+
+                        if (idMembreRecherche == 0) {
+
+                            System.out.println(
+                                    "Opération annulée."
+                            );
+
+                            break;
+                        }
+
+                        membreRecherche =
+                                membreRepository.findById(
+                                        idMembreRecherche
+                                );
+
+                        if (membreRecherche == null) {
+
+                            System.out.println(
+                                    "Membre introuvable."
+                            );
+                        }
+
+                    } while (membreRecherche == null);
+
+                    if (idMembreRecherche == 0
+                            || membreRecherche == null) {
+                        break;
+                    }
 
                     List<Emprunt> resultats =
                             service.listerEmpruntsMembre(
@@ -248,13 +580,16 @@ public class Main {
 
                             System.out.println(
                                     "ID emprunt : "
-                                    + emprunt.getId()
-                                    + " | Livre : "
-                                    + emprunt.getLivre().getTitre()
-                                    + " | Auteur : "
-                                    + emprunt.getLivre().getAuteur()
-                                    + " | Retour prévu : "
-                                    + emprunt.getDateRetourPrevue()
+                                            + emprunt.getId()
+                                            + " | Livre : "
+                                            + emprunt.getLivre()
+                                            .getTitre()
+                                            + " | Auteur : "
+                                            + emprunt.getLivre()
+                                            .getAuteur()
+                                            + " | Retour prévu : "
+                                            + emprunt
+                                            .getDateRetourPrevue()
                             );
                         }
                     }
@@ -283,11 +618,11 @@ public class Main {
 
                             System.out.println(
                                     "ID : "
-                                    + livreRetard.getId()
-                                    + " | Titre : "
-                                    + livreRetard.getTitre()
-                                    + " | Auteur : "
-                                    + livreRetard.getAuteur()
+                                            + livreRetard.getId()
+                                            + " | Titre : "
+                                            + livreRetard.getTitre()
+                                            + " | Auteur : "
+                                            + livreRetard.getAuteur()
                             );
                         }
                     }
@@ -316,9 +651,9 @@ public class Main {
 
                             System.out.println(
                                     entry.getKey()
-                                    + " : "
-                                    + entry.getValue()
-                                    + " emprunt(s)"
+                                            + " : "
+                                            + entry.getValue()
+                                            + " emprunt(s)"
                             );
                         }
                     }
@@ -328,7 +663,7 @@ public class Main {
                 case 0:
 
                     System.out.println(
-                            "\nAu revoir ! Merci d'avoir utilisé la bibliothèque."
+                            "\nAu revoir !"
                     );
 
                     break;
