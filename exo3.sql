@@ -107,3 +107,66 @@ INSERT INTO inscription (id_adherent, id_cours, dateInscription, presence) VALUE
 (4, 2, '2026-08-03', 0),
 (5, 1, '2026-08-02', 1),
 (5, 4, '2026-08-06', 1);
+
+-- 1. Liste des cours avec le nombre d'inscrits
+SELECT 
+    c.nom AS cours,
+    c.capacite,
+    COUNT(i.id) AS nombre_inscrits
+FROM cours_collectif c
+LEFT JOIN inscription i 
+    ON c.id = i.id_cours
+GROUP BY c.id, c.nom, c.capacite;
+
+
+-- 2. Cours ayant atteint leur capacité maximale
+SELECT 
+    c.nom AS cours,
+    c.capacite,
+    COUNT(i.id) AS nombre_inscrits
+FROM cours_collectif c
+LEFT JOIN inscription i 
+    ON c.id = i.id_cours
+GROUP BY c.id, c.nom, c.capacite
+HAVING COUNT(i.id) >= c.capacite;
+
+
+-- 3. Adhérents sans abonnement actif
+SELECT 
+    a.id,
+    a.nom,
+    a.prenom
+FROM adherent a
+LEFT JOIN abonnement ab 
+    ON a.id = ab.id_adherent
+    AND ab.statut = 'actif'
+WHERE ab.id IS NULL;
+
+
+-- 4. Top 3 des adhérents les plus assidus
+SELECT 
+    a.nom,
+    a.prenom,
+    SUM(i.presence) AS nombre_presences
+FROM adherent a
+JOIN inscription i 
+    ON a.id = i.id_adherent
+GROUP BY a.id, a.nom, a.prenom
+ORDER BY nombre_presences DESC
+LIMIT 3;
+
+
+-- 5. Nombre d'adhérents par type d'abonnement
+SELECT 
+    type,
+    COUNT(DISTINCT id_adherent) AS nombre_adherents
+FROM abonnement
+GROUP BY type;
+
+
+-- 6. Revenus du mois d'août 2026
+SELECT 
+    SUM(montant) AS revenus_du_mois
+FROM abonnement
+WHERE MONTH(date_paiement) = 8
+AND YEAR(date_paiement) = 2026;
