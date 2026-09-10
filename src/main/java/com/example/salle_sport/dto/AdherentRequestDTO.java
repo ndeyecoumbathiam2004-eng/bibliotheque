@@ -1,9 +1,9 @@
-package com.example.dto;
+package com.example.salle_sport.dto;
+
+import java.time.LocalDate;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-
-import java.time.LocalDate;
 
 public class AdherentRequestDTO {
 

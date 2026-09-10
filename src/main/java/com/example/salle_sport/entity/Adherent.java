@@ -1,4 +1,4 @@
-package com.example.entity;
+package com.example.salle_sport.entity;
 
 import java.time.LocalDate;
 

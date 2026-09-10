@@ -1,4 +1,4 @@
-package com.example.dto;
+package com.example.salle_sport.dto;
 
 import java.time.LocalDate;
 
