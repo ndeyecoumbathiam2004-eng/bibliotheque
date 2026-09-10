@@ -1,0 +1,62 @@
+body {
+font-family: Arial, sans-serif;
+margin: 0;
+padding: 20px;
+background-color: #f4f4f4;
+}
+
+h1 {
+text-align: center;
+margin-bottom: 25px;
+}
+
+#search {
+display: block;
+width: 80%;
+max-width: 500px;
+margin: 0 auto 30px;
+padding: 12px;
+font-size: 16px;
+border: 1px solid #ccc;
+border-radius: 8px;
+}
+
+#countries {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 20px;
+}
+
+#countries div {
+background-color: white;
+padding: 20px;
+border-radius: 10px;
+border: 1px solid #ddd;
+text-align: center;
+}
+
+#countries img {
+width: 150px;
+height: 100px;
+object-fit: cover;
+}
+
+/* Tablette */
+@media (max-width: 900px) {
+#countries {
+grid-template-columns: repeat(2, 1fr);
+}
+}
+
+/* Téléphone */
+@media (max-width: 600px) {
+#countries {
+grid-template-columns: 1fr;
+}
+
+
+#search {
+    width: 90%;
+}
+
+}
